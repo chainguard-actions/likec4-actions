@@ -1,0 +1,35 @@
+name: Test build with hash history
+on:
+  workflow_dispatch:
+
+jobs:
+  test-build-hash-history:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Run LikeC4 build with hash history
+        id: action
+        uses: .
+        with:
+          action: build
+          path: ${{ github.workspace }}/tests/fixtures/likec4
+          output: ${{ github.workspace }}/likec4-hash-history-output
+          use-hash-history: 'true'
+
+      - name: Assert build output with hash history exists
+        run: |
+          echo "Checking build output directory (hash history mode)..."
+          if [ ! -d "$GITHUB_WORKSPACE/likec4-hash-history-output" ]; then
+            echo "FAIL: output directory $GITHUB_WORKSPACE/likec4-hash-history-output does not exist"
+            exit 1
+          fi
+          echo "Output directory exists"
+
+          if [ ! -f "$GITHUB_WORKSPACE/likec4-hash-history-output/index.html" ]; then
+            echo "FAIL: index.html not found in output directory"
+            exit 1
+          fi
+          echo "index.html found"
+
+          echo "PASS: build with hash history output is valid"

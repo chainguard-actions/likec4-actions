@@ -1,0 +1,34 @@
+name: Test codegen action
+on:
+  workflow_dispatch:
+
+jobs:
+  test-codegen:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Run LikeC4 codegen (views-data)
+        id: action
+        uses: .
+        with:
+          codegen: views-data
+          path: ${{ github.workspace }}/tests/fixtures/likec4
+          output: ${{ github.workspace }}/likec4-codegen-output/views.ts
+
+      - name: Assert codegen output exists
+        run: |
+          echo "Checking codegen output..."
+          if [ ! -f "$GITHUB_WORKSPACE/likec4-codegen-output/views.ts" ]; then
+            echo "FAIL: generated file $GITHUB_WORKSPACE/likec4-codegen-output/views.ts does not exist"
+            exit 1
+          fi
+          echo "Generated file found"
+
+          FILE_SIZE=$(wc -c < "$GITHUB_WORKSPACE/likec4-codegen-output/views.ts")
+          echo "File size: $FILE_SIZE bytes"
+          if [ "$FILE_SIZE" -eq 0 ]; then
+            echo "FAIL: generated file is empty"
+            exit 1
+          fi
+          echo "PASS: codegen output is valid"

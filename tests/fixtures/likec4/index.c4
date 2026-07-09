@@ -1,0 +1,44 @@
+specification {
+  element actor {
+    style {
+      shape person
+    }
+  }
+  element system
+  element component
+}
+
+model {
+  customer = actor 'Customer' {
+    description 'A user of our product'
+  }
+
+  cloud = system 'Our SaaS' {
+    description 'Our product'
+
+    backend = component 'Backend' {
+      description 'Implements business logic'
+    }
+
+    ui = component 'Frontend' {
+      description 'Web application'
+    }
+
+    ui -> backend 'calls'
+  }
+
+  customer -> cloud 'uses'
+  customer -> cloud.ui 'opens in browser'
+}
+
+views {
+  view index of customer {
+    title 'Landscape view'
+    include customer, cloud, cloud.*
+  }
+
+  view cloud of cloud {
+    title 'Cloud Overview'
+    include *
+  }
+}

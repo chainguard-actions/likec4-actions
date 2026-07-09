@@ -1,0 +1,34 @@
+name: Test export png action
+on:
+  workflow_dispatch:
+
+jobs:
+  test-export-png:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Run LikeC4 export png
+        id: action
+        uses: .
+        with:
+          export: png
+          path: ${{ github.workspace }}/tests/fixtures/likec4
+          output: ${{ github.workspace }}/likec4-export-output
+
+      - name: Assert export output exists
+        run: |
+          echo "Checking export output directory..."
+          if [ ! -d "$GITHUB_WORKSPACE/likec4-export-output" ]; then
+            echo "FAIL: output directory $GITHUB_WORKSPACE/likec4-export-output does not exist"
+            exit 1
+          fi
+          echo "Output directory exists"
+
+          PNG_COUNT=$(find "$GITHUB_WORKSPACE/likec4-export-output" -name "*.png" | wc -l)
+          echo "PNG files found: $PNG_COUNT"
+          if [ "$PNG_COUNT" -eq 0 ]; then
+            echo "FAIL: no PNG files found in output directory"
+            exit 1
+          fi
+          echo "PASS: export png output is valid, found $PNG_COUNT PNG file(s)"
