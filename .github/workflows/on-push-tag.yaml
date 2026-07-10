@@ -1,0 +1,92 @@
+name: on-push-tag
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+  deployments: write
+  packages: write
+  actions: write      
+
+jobs:
+
+  build-docker:
+    name: build docker for tag
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: checkout
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        with:
+          fetch-depth: 0
+          ref: ${{ github.ref }}
+
+      - name: build package
+        uses: elgohr/Publish-Docker-Github-Action@1c2f28ccd9476e8a936ac9a1f287405504c93304 # v5
+        with:
+          name: ${{ github.repository }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+          registry: ghcr.io
+          buildoptions: "--force-rm"
+          tag_names: true
+ 
+  github-release:
+    if: startsWith(github.ref_name, 'v1.')
+    name: github release for tag
+    needs: [build-docker]
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: checkout
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        with:
+          fetch-depth: 0
+          ref: ${{ github.ref }}
+
+      - name: create release
+        env:          
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          NOTES: ${{ github.event.head_commit.message }}
+          REF_NAME: ${{ github.ref_name }}
+        run: |
+          gh release create "${REF_NAME}" --title "${REF_NAME}" --notes "${NOTES}"
+          
+  move-tags:
+    if: startsWith(github.ref_name, 'v1.')
+    name: move tags
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: checkout
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        with:
+          fetch-depth: 0
+          ref: ${{ github.ref }}
+
+      - name: parse semver
+        id: semver_parser 
+        uses: booxmedialtd/ws-action-parse-semver@3576f3a20a39f8752fe0d8195f5ed384090285dc # v1
+        with:
+          input_string: ${{ github.ref }}
+          version_extractor_regex: '\/v(.*)$' 
+
+      - name: move tags
+        env:
+          ACTOR: ${{ github.actor }}
+          SEMVER_MAJOR: ${{ steps.semver_parser.outputs.major }}
+          SEMVER_MINOR: ${{ steps.semver_parser.outputs.minor }}
+        run: |
+          git config user.name "${ACTOR}"
+          git config user.email "${ACTOR}@users.noreply.github.com"
+
+          MAJOR="v${SEMVER_MAJOR}"
+          git tag -fa "$MAJOR" -m "update ${MAJOR} tag"
+          git push origin "$MAJOR" --force
+          
+          MINOR="${MAJOR}.${SEMVER_MINOR}"
+          git tag -fa "$MINOR" -m "update ${MINOR} tag"
+          git push origin "$MINOR" --force

@@ -1,0 +1,31 @@
+name: Test default build (no action specified)
+on:
+  workflow_dispatch:
+
+jobs:
+  test-default-build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Run LikeC4 with no action specified (defaults to build)
+        id: action
+        uses: .
+        with:
+          path: tests/fixtures/likec4
+          output: tests/default-build-output
+
+      - name: Assert default build output exists
+        run: |
+          echo "Checking default build output directory..."
+          if [ ! -d "$GITHUB_WORKSPACE/tests/default-build-output" ]; then
+            echo "FAIL: default build output directory not found at tests/default-build-output"
+            exit 1
+          fi
+          echo "Default build output directory exists"
+
+          if [ ! -f "$GITHUB_WORKSPACE/tests/default-build-output/index.html" ]; then
+            echo "FAIL: index.html not found in default build output"
+            exit 1
+          fi
+          echo "PASS: index.html found in default build output"

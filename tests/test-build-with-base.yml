@@ -1,0 +1,33 @@
+name: Test build action with base URL
+on:
+  workflow_dispatch:
+
+jobs:
+  test-build-with-base:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Run LikeC4 build action with base URL
+        id: action
+        uses: .
+        with:
+          action: build
+          path: tests/fixtures/likec4
+          output: tests/build-base-output
+          base: /my-app/
+
+      - name: Assert build output exists with base URL
+        run: |
+          echo "Checking build output directory..."
+          if [ ! -d "$GITHUB_WORKSPACE/tests/build-base-output" ]; then
+            echo "FAIL: build output directory not found at tests/build-base-output"
+            exit 1
+          fi
+          echo "Build output directory exists"
+
+          if [ ! -f "$GITHUB_WORKSPACE/tests/build-base-output/index.html" ]; then
+            echo "FAIL: index.html not found in build output"
+            exit 1
+          fi
+          echo "PASS: index.html found in build output with base URL"

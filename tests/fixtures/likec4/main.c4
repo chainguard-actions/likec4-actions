@@ -1,0 +1,28 @@
+specification {
+  element actor
+  element system
+  element component
+}
+
+model {
+  customer = actor 'Customer' {
+    description 'A user of our product'
+  }
+
+  cloud = system 'Cloud' {
+    description 'Our cloud system'
+
+    api = component 'API' {
+      description 'REST API'
+    }
+  }
+
+  customer -> cloud 'uses'
+}
+
+views {
+  view index of customer {
+    title 'Landscape'
+    include customer, cloud
+  }
+}

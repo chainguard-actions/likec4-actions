@@ -1,0 +1,36 @@
+name: Test codegen action with webcomponent prefix
+on:
+  workflow_dispatch:
+
+jobs:
+  test-codegen-webcomponent-prefix:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Run LikeC4 codegen action with webcomponent prefix
+        id: action
+        uses: .
+        with:
+          codegen: webcomponent
+          path: tests/fixtures/likec4
+          output: tests/codegen-wc-output/likec4.js
+          webcomponent-prefix: myapp
+
+      - name: Assert codegen webcomponent output exists
+        run: |
+          echo "Checking codegen webcomponent output..."
+          if [ ! -f "$GITHUB_WORKSPACE/tests/codegen-wc-output/likec4.js" ]; then
+            echo "FAIL: codegen webcomponent output file not found at tests/codegen-wc-output/likec4.js"
+            exit 1
+          fi
+          echo "PASS: codegen webcomponent output file exists"
+
+          # Check the file has some content
+          SIZE=$(wc -c < "$GITHUB_WORKSPACE/tests/codegen-wc-output/likec4.js")
+          echo "Output file size: $SIZE bytes"
+          if [ "$SIZE" -eq 0 ]; then
+            echo "FAIL: codegen webcomponent output file is empty"
+            exit 1
+          fi
+          echo "PASS: codegen webcomponent output file has content"

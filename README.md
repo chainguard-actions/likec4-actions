@@ -1,16 +1,85 @@
-# likec4/actions
+# LikeC4 Github Action
 
-LikeC4 GitHub Action
+![GitHub release](https://img.shields.io/github/release/likec4/actions.svg)
 
-Hardened by [Chainguard](https://www.chainguard.dev) from the upstream action at [https://github.com/likec4/actions](https://github.com/likec4/actions).
+This action wraps [likec4](https://likec4.dev/docs/tools/cli/) CLI as a GitHub Action.
+ 
+## Usage
 
-## Versions
+Build website:
 
-| Version | Tag | Upstream commit |
-|---------|-----|-----------------|
-| v1 | [`v1`](https://github.com/chainguard-actions/likec4-actions/tree/v1) | [`c322cb9`](https://github.com/likec4/actions/commit/c322cb9c53e3b2ef80f18a29d9364781a1b2019b) |
-| v1.85 | [`v1.85`](https://github.com/chainguard-actions/likec4-actions/tree/v1.85) | [`c322cb9`](https://github.com/likec4/actions/commit/c322cb9c53e3b2ef80f18a29d9364781a1b2019b) |
-| v1.85.0 | [`v1.85.0`](https://github.com/chainguard-actions/likec4-actions/tree/v1.85.0) | [`c322cb9`](https://github.com/likec4/actions/commit/c322cb9c53e3b2ef80f18a29d9364781a1b2019b) |
+```yaml
+...
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: build
+        uses: likec4/actions@v1
+        with:
+          action: build
+          path: src/likec4
+          output: dist
+          base: baseurl
+
+      - name: upload artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: likec4
+          path: dist
+```
+
+Export diagrams to PNG:
+
+```yaml
+...
+    steps:
+      - name: export diagrams
+        uses: likec4/actions@v1
+        with:
+          export: png
+          path: src/likec4
+          output: images
+          use-dot-bin: 'true'
+```
+
+Code generation:
+
+```yaml
+...
+    steps:
+      - name: code generation
+        uses: likec4/actions@v1
+        with:
+          codegen: react
+          output: __generated__/likec4.tsx
+```
+
+## Inputs
+
+| Name          | Description                                                                                           |
+| ------------- | ----------------------------------------------------------------------------------------------------- |
+| `action`      | Action to perform (`build` / `export` / `codegen`)                                                    |
+| `export`      | Can be used instead of `action: export`                                                               |
+| `codegen`     | Can be used instead of `action: codegen`, same values as in [cli](https://likec4.dev/docs/tools/cli/) |
+| `path`        | Path in repository to likec4 sources, root otherwise                                                  |
+| `output`      | Output directory/file                                                                                 |
+| `base`        | Custom baseUrl for website                                                                            |
+| `use-dot-bin` | if `'true'` will use `dot` binary of graphviz                                                         |
+| `use-hash-history` | use hash history for navigation, e.g. "/#/view" instead of "/view" |
+| `webcomponent-prefix` | same as in [cli](https://likec4.dev/tooling/codegen/#webcomponent)      |
+
+> All inputs are optional.  
+> By default builds a website to `dist` directory.
+
+## Report Bugs
+
+Report bugs at https://github.com/likec4/actions/issues.
+
+If you are reporting a bug, please include:
+
+*   Your operating system name and version.
+*   Any details about your workflow that might be helpful in troubleshooting.
+*   Detailed steps to reproduce the bug.
 
 ## Privacy
 

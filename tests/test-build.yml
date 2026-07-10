@@ -1,0 +1,38 @@
+name: Test build action
+on:
+  workflow_dispatch:
+
+jobs:
+  test-build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Run LikeC4 build action
+        id: action
+        uses: .
+        with:
+          action: build
+          path: tests/fixtures/likec4
+          output: tests/build-output
+
+      - name: Assert build output exists
+        run: |
+          echo "Checking build output directory..."
+          if [ ! -d "$GITHUB_WORKSPACE/tests/build-output" ]; then
+            echo "FAIL: build output directory not found at tests/build-output"
+            exit 1
+          fi
+          echo "Build output directory exists"
+
+          if [ ! -f "$GITHUB_WORKSPACE/tests/build-output/index.html" ]; then
+            echo "FAIL: index.html not found in build output"
+            exit 1
+          fi
+          echo "PASS: index.html found in build output"
+
+          if [ ! -f "$GITHUB_WORKSPACE/tests/build-output/404.html" ]; then
+            echo "FAIL: 404.html not found in build output (should be copied from index.html)"
+            exit 1
+          fi
+          echo "PASS: 404.html found in build output"

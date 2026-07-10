@@ -1,0 +1,116 @@
+name: release-pr
+
+on:
+  pull_request:    
+    branches:
+      - main
+
+concurrency:
+  group:  ${{ github.workflow }}-${{github.event_name}}-${{ github.head_ref || github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: write
+  deployments: write
+  packages: write
+
+jobs:
+  test:
+    name: Test
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: checkout
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+
+      - name: update action.yml to build locally
+        run: |
+          sed -i 's/.*image\:.*/  image\: \"Dockerfile\"/' action.yml
+          cat action.yml      
+
+      - name: build
+        uses: ./ # Uses an action in the root directory
+        with:
+          action: build
+
+      - run: |
+          ls -l dist/
+
+      - name: export
+        uses: ./ # Uses an action in the root directory
+        with:
+          export: png
+          output: images
+
+      - run: |
+          ls -l images/
+
+      - name: codegen react
+        uses: ./ # Uses an action in the root directory
+        with:
+          action: codegen
+
+      - run: |
+          ls -l
+
+      - name: codegen mmd
+        uses: ./ # Uses an action in the root directory
+        with:
+          codegen: mmd
+          output: mmd
+
+      - run: |
+          ls -l mmd/
+
+  build-docker:
+    if: startsWith(github.event.pull_request.head.ref || github.head_ref, 'release/v')
+    needs: [test]
+    name: Build
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: checkout
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        with:
+          fetch-depth: 0
+          ref: ${{ github.head_ref }}
+
+      - name: start deployment
+        uses: bobheadxi/deployments@648679e8e4915b27893bd7dbc35cb504dc915bc8 # v1
+        id: deployment
+        with:
+          step: start
+          token: ${{ secrets.GITHUB_TOKEN }}
+          env: release
+          ref: ${{ github.head_ref }}          
+
+      - id: release
+        name: get version
+        env:
+          HEAD_REF_INPUT: ${{ github.event.pull_request.head.ref || github.head_ref }}
+        run: |
+          HEAD_REF=$(printf '%s' "${HEAD_REF_INPUT}" | tr -d '\n\r')
+          HEAD_REF=${HEAD_REF/release\//}
+          echo "HEAD_REF=${HEAD_REF}"
+          safe=$(printf '%s' "${HEAD_REF}" | tr -d '\n\r')
+          echo "version=${safe}" >> "$GITHUB_OUTPUT"
+
+      - name: build docker
+        uses: elgohr/Publish-Docker-Github-Action@1c2f28ccd9476e8a936ac9a1f287405504c93304 # v5
+        with:
+          name: ${{ github.repository }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+          registry: ghcr.io
+          buildoptions: "--force-rm"
+          tags: "${{ steps.release.outputs.version }}"
+
+      - name: update deployment status
+        uses: bobheadxi/deployments@648679e8e4915b27893bd7dbc35cb504dc915bc8 # v1
+        if: always()
+        with:
+          step: finish
+          token: ${{ secrets.GITHUB_TOKEN }}
+          status: ${{ job.status }}
+          env: ${{ steps.deployment.outputs.env }}
+          deployment_id: ${{ steps.deployment.outputs.deployment_id }}
