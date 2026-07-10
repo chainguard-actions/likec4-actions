@@ -11,6 +11,7 @@ Hardened by [Chainguard](https://www.chainguard.dev) from the upstream action at
 | v1 | [`v1`](https://github.com/chainguard-actions/likec4-actions/tree/v1) | [`c322cb9`](https://github.com/likec4/actions/commit/c322cb9c53e3b2ef80f18a29d9364781a1b2019b) |
 | v1.85 | [`v1.85`](https://github.com/chainguard-actions/likec4-actions/tree/v1.85) | [`c322cb9`](https://github.com/likec4/actions/commit/c322cb9c53e3b2ef80f18a29d9364781a1b2019b) |
 | v1.85.0 | [`v1.85.0`](https://github.com/chainguard-actions/likec4-actions/tree/v1.85.0) | [`c322cb9`](https://github.com/likec4/actions/commit/c322cb9c53e3b2ef80f18a29d9364781a1b2019b) |
+| v1.89.0 | [`v1.89.0`](https://github.com/chainguard-actions/likec4-actions/tree/v1.89.0) | [`d36a6b8`](https://github.com/likec4/actions/commit/d36a6b8c87c1d540a3737302808755db435183b0) |
 
 ## Privacy
 
